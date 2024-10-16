@@ -8,41 +8,56 @@ using TMPro;
 public class ClientUDP : MonoBehaviour
 {
     Socket socket;
+
     public GameObject UItextObj;
     TextMeshProUGUI UItext;
+
+    public GameObject ChatPanelObj;
+    TextMeshProUGUI ChatPanel;
+
     string clientText;
 
-    // Start is called before the first frame update
+    IPEndPoint ServerEP;
+
     void Start()
     {
         UItext = UItextObj.GetComponent<TextMeshProUGUI>();
-
+        ChatPanel = ChatPanelObj.GetComponent<TextMeshProUGUI>();
     }
+
     public void StartClient()
     {
-        Thread mainThread = new Thread(Send);
+        Thread mainThread = new(Send);
         mainThread.Start();
     }
 
     void Update()
     {
         UItext.text = clientText;
+
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            byte[] toSend = Encoding.ASCII.GetBytes(ChatPanel.text);
+            ChatPanel.text = "";
+            Thread sendMessageThrd = new(() => SendMessage(toSend));
+            sendMessageThrd.Start();
+        }
     }
 
     void Send()
     {
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.1.131"), 9050);
+        ServerEP = new IPEndPoint(IPAddress.Parse("192.168.1.131"), 9050);
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        socket.Connect(ipep);
+        socket.Connect(ServerEP);
 
         byte[] data = new byte[1024];
         string handshake = "Hello World";
 
         data = Encoding.ASCII.GetBytes(handshake);
 
-        socket.SendTo(data, ipep);
+        socket.SendTo(data, ServerEP);
 
-        Thread receive = new Thread(Receive);
+        Thread receive = new(Receive);
         receive.Start();
     }
 
@@ -56,8 +71,11 @@ public class ClientUDP : MonoBehaviour
 
         clientText = ("Message received from {0}: " + Remote.ToString());
         clientText = clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
-
     }
 
+    void SendMessage(byte[] toSend)
+    {
+        socket.SendTo(toSend, ServerEP);
+    }
 }
 

@@ -22,11 +22,11 @@ public class ServerUDP : MonoBehaviour
     {
         serverText = "Starting UDP Server...";
 
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 9050);
+        IPEndPoint ipep = new(IPAddress.Any, 9050);
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         socket.Bind(ipep);
 
-        Thread newConnection = new Thread(Receive);
+        Thread newConnection = new(Receive);
         newConnection.Start();
     }
 
@@ -42,8 +42,8 @@ public class ServerUDP : MonoBehaviour
 
         serverText = serverText + "\n" + "Waiting for new Client...";
 
-        IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-        EndPoint Remote = (EndPoint)(sender);
+        IPEndPoint sender = new(IPAddress.Any, 0);
+        EndPoint Remote = sender;
 
         while (true)
         {
@@ -52,21 +52,18 @@ public class ServerUDP : MonoBehaviour
             serverText = serverText + "\n" + "Message received from {0}:" + Remote.ToString();
             serverText = serverText + "\n" + Encoding.ASCII.GetString(data, 0, recv);
 
-            Thread sendPing = new Thread(() => Send(Remote));
+            Thread sendPing = new(() => Send(Remote));
             sendPing.Start();
         }
     }
 
     void Send(EndPoint Remote)
     {
-        //TO DO 4
-        //Use socket.SendTo to send a ping using the remote we stored earlier.
-        byte[] data = new byte[1024];
-        string welcome = "Ping";
+        string Ping = "Ping";
 
-        data = Encoding.ASCII.GetBytes(welcome);
+        byte[] Ping_Encoded = Encoding.ASCII.GetBytes(Ping);
 
-        socket.SendTo(data, Remote);
+        socket.SendTo(Ping_Encoded, Remote);
     }
 
 
