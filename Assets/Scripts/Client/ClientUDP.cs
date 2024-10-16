@@ -13,7 +13,7 @@ public class ClientUDP : MonoBehaviour
     TextMeshProUGUI UItext;
 
     public GameObject ChatPanelObj;
-    TextMeshProUGUI ChatPanel;
+    TMP_InputField ChatPanel;
 
     string clientText;
 
@@ -22,7 +22,7 @@ public class ClientUDP : MonoBehaviour
     void Start()
     {
         UItext = UItextObj.GetComponent<TextMeshProUGUI>();
-        ChatPanel = ChatPanelObj.GetComponent<TextMeshProUGUI>();
+        ChatPanel = ChatPanelObj.GetComponent<TMP_InputField>();
     }
 
     public void StartClient()
@@ -35,10 +35,13 @@ public class ClientUDP : MonoBehaviour
     {
         UItext.text = clientText;
 
-        if (Input.GetKeyDown(KeyCode.Return))
+        if (Input.GetKeyDown(KeyCode.Return) && ServerEP != null)
         {
             byte[] toSend = Encoding.ASCII.GetBytes(ChatPanel.text);
+            clientText += "\nyou: " + ChatPanel.text;
+
             ChatPanel.text = "";
+
             Thread sendMessageThrd = new(() => SendMessage(toSend));
             sendMessageThrd.Start();
         }
@@ -51,7 +54,7 @@ public class ClientUDP : MonoBehaviour
         socket.Connect(ServerEP);
 
         byte[] data = new byte[1024];
-        string handshake = "Hello World";
+        string handshake = " entered the chat";
 
         data = Encoding.ASCII.GetBytes(handshake);
 
@@ -63,14 +66,14 @@ public class ClientUDP : MonoBehaviour
 
     void Receive()
     {
-        IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-        EndPoint Remote = (EndPoint)(sender);
+        IPEndPoint sender = new(IPAddress.Any, 0);
+        EndPoint Remote = sender;
 
         byte[] data = new byte[1024];
         int recv = socket.ReceiveFrom(data, ref Remote);
 
         clientText = ("Message received from {0}: " + Remote.ToString());
-        clientText = clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
+        clientText = clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);  
     }
 
     void SendMessage(byte[] toSend)
@@ -78,4 +81,3 @@ public class ClientUDP : MonoBehaviour
         socket.SendTo(toSend, ServerEP);
     }
 }
-

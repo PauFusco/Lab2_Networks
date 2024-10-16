@@ -26,7 +26,7 @@ public class ServerUDP : MonoBehaviour
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         socket.Bind(ipep);
 
-        Thread newConnection = new(Receive);
+        Thread newConnection = new(Handshake);
         newConnection.Start();
     }
 
@@ -35,7 +35,7 @@ public class ServerUDP : MonoBehaviour
         UItext.text = serverText;
     }
 
-    void Receive()
+    void Handshake()
     {
         int recv;
         byte[] data = new byte[1024];
@@ -43,16 +43,16 @@ public class ServerUDP : MonoBehaviour
         serverText = serverText + "\n" + "Waiting for new Client...";
 
         IPEndPoint sender = new(IPAddress.Any, 0);
-        EndPoint Remote = sender;
+        EndPoint remote = sender;
 
         while (true)
         {
-            recv = socket.ReceiveFrom(data, ref Remote);
+            recv = socket.ReceiveFrom(data, ref remote);
 
-            serverText = serverText + "\n" + "Message received from {0}:" + Remote.ToString();
-            serverText = serverText + "\n" + Encoding.ASCII.GetString(data, 0, recv);
+            serverText += "\n" + remote.ToString() + ": ";
+            serverText += Encoding.ASCII.GetString(data, 0, recv);
 
-            Thread sendPing = new(() => Send(Remote));
+            Thread sendPing = new(() => Send(remote));
             sendPing.Start();
         }
     }
@@ -65,6 +65,4 @@ public class ServerUDP : MonoBehaviour
 
         socket.SendTo(Ping_Encoded, Remote);
     }
-
-
 }
