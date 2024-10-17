@@ -36,7 +36,7 @@ public class ServerTCP : MonoBehaviour
     {
         serverText = "Starting TCP Server...";
 
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 9050);
+        IPEndPoint ipep = new(IPAddress.Any, 9050);
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         
         socket.Bind(ipep);
@@ -51,15 +51,17 @@ public class ServerTCP : MonoBehaviour
     {
         while(true)
         {
-            User newUser = new User();
-            newUser.name = "";
+            User newUser = new()
+            {
+                name = "",
 
-            newUser.socket = socket.Accept();//accept the socket
+                socket = socket.Accept()
+            };
 
             IPEndPoint clientep = (IPEndPoint)socket.RemoteEndPoint;
             serverText = serverText + "\n"+ "Connected with " + clientep.Address.ToString() + " at port " + clientep.Port.ToString();
 
-            Thread newConnection = new Thread(() => Receive(newUser));
+            Thread newConnection = new(() => Receive(newUser));
             newConnection.Start();
         }
         //This users could be stored in the future on a list
@@ -84,7 +86,7 @@ public class ServerTCP : MonoBehaviour
                 serverText = serverText + "\n" + Encoding.ASCII.GetString(data, 0, recv);
             }
 
-            Thread answer = new Thread(() => Send(user));
+            Thread answer = new(() => Send(user));
             answer.Start();
         }
     }

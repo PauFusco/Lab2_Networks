@@ -20,42 +20,40 @@ public class ClientTCP : MonoBehaviour
     void Update()
     {
         UItext.text = clientText;
-
     }
 
     public void StartClient()
     {
-        Thread connect = new Thread(Connect);
+        Thread connect = new(Connect);
         connect.Start();
     }
+
     void Connect()
     {
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.1.131"), 9050);
+        IPEndPoint ipep = new(IPAddress.Parse("192.168.1.131"), 9050);
         server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         server.Connect(ipep);
 
-        Thread sendThread = new Thread(Send);
+        Thread sendThread = new(() => Send("Client Ping"));
         sendThread.Start();
 
-        Thread receiveThread = new Thread(Receive);
+        Thread receiveThread = new(Receive);
         receiveThread.Start();
-
     }
-    void Send()
+
+    void Send(string toSend)
     {
-        byte[] data = Encoding.ASCII.GetBytes("Client Ping");
+        byte[] data = Encoding.ASCII.GetBytes(toSend);
         server.Send(data);
     }
 
     void Receive()
     {
         byte[] data = new byte[1024];
-        int recv = 0;
 
         server.Receive(data);
-        recv = data.Length;
+        int recv = data.Length;
         clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
     }
-
 }
