@@ -13,7 +13,7 @@ public class ClientUDP : MonoBehaviour
     TextMeshProUGUI UItext;
 
     public GameObject ChatPanelObj;
-    TMP_InputField ChatPanel;
+    TMP_InputField MessageInput;
 
     string clientText;
 
@@ -22,13 +22,18 @@ public class ClientUDP : MonoBehaviour
     void Start()
     {
         UItext = UItextObj.GetComponent<TextMeshProUGUI>();
-        ChatPanel = ChatPanelObj.GetComponent<TMP_InputField>();
+        MessageInput = ChatPanelObj.GetComponent<TMP_InputField>();
     }
 
     public void StartClient()
     {
-        Thread mainThread = new(Send);
-        mainThread.Start();
+        
+        ServerEP = new IPEndPoint(IPAddress.Parse(""/*PUT YOUR IP HERE*/), 9050);
+        socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.Connect(ServerEP);
+
+        Thread Validate = new(ValidateConnection);
+        Validate.Start();
     }
 
     void Update()
@@ -37,22 +42,17 @@ public class ClientUDP : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Return) && ServerEP != null)
         {
-            byte[] toSend = Encoding.ASCII.GetBytes(ChatPanel.text);
-            clientText += "\nyou: " + ChatPanel.text;
+            byte[] toSend = Encoding.ASCII.GetBytes(MessageInput.text);
 
-            ChatPanel.text = "";
+            MessageInput.text = "";
 
             Thread sendMessageThrd = new(() => SendMessage(toSend));
             sendMessageThrd.Start();
         }
     }
 
-    void Send()
+    void ValidateConnection()
     {
-        ServerEP = new IPEndPoint(IPAddress.Parse("192.168.1.131"), 9050);
-        socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        socket.Connect(ServerEP);
-
         byte[] data = new byte[1024];
         string handshake = " entered the chat";
 
@@ -69,11 +69,13 @@ public class ClientUDP : MonoBehaviour
         IPEndPoint sender = new(IPAddress.Any, 0);
         EndPoint Remote = sender;
 
-        byte[] data = new byte[1024];
-        int recv = socket.ReceiveFrom(data, ref Remote);
+        while (true)
+        {
+            byte[] data = new byte[1024];
+            int recv = socket.ReceiveFrom(data, ref Remote);
 
-        clientText = ("Message received from {0}: " + Remote.ToString());
-        clientText = clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);  
+            clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
+        }
     }
 
     void SendMessage(byte[] toSend)

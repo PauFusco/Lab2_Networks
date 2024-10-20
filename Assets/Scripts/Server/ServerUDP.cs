@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine;
 using System.Threading;
 using TMPro;
+using System.Collections.Generic;
 
 public class ServerUDP : MonoBehaviour
 {
@@ -13,11 +14,17 @@ public class ServerUDP : MonoBehaviour
     TextMeshProUGUI UItext;
     string serverText;
 
+    private readonly List<EndPoint> clients = new();
+
     void Start()
     {
         UItext = UItextObj.GetComponent<TextMeshProUGUI>();
-
     }
+    void Update()
+    {
+        UItext.text = serverText;
+    }
+
     public void startServer()
     {
         serverText = "Starting UDP Server...";
@@ -26,16 +33,11 @@ public class ServerUDP : MonoBehaviour
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         socket.Bind(ipep);
 
-        Thread newConnection = new(Handshake);
+        Thread newConnection = new(CheckClients);
         newConnection.Start();
     }
 
-    void Update()
-    {
-        UItext.text = serverText;
-    }
-
-    void Handshake()
+    void CheckClients()
     {
         int recv;
         byte[] data = new byte[1024];
@@ -49,20 +51,49 @@ public class ServerUDP : MonoBehaviour
         {
             recv = socket.ReceiveFrom(data, ref remote);
 
-            serverText += "\n" + remote.ToString() + ": ";
-            serverText += Encoding.ASCII.GetString(data, 0, recv);
+            if (recv == 0) continue;
+            
+            string message = Encoding.ASCII.GetString(data, 0, recv);
 
-            Thread sendPing = new(() => Send(remote));
-            sendPing.Start();
+            CheckUpdateClientList(remote);
+            
+            serverText += "\n" + remote.ToString() + ": ";
+            serverText += message;
+
+            foreach (EndPoint client in clients)
+            {
+                string massage = remote.ToString() + ": " + message;
+
+                Thread SendMessage = new(() => Send(massage, client));
+                SendMessage.Start();
+            }
         }
     }
 
-    void Send(EndPoint Remote)
+    void CheckUpdateClientList(EndPoint remote)
     {
-        string Ping = "Ping";
+        if (!clients.Contains(remote))
+        {
+            clients.Add(remote);
+
+            Thread validate = new(() => ValidateConnection(remote));
+            validate.Start();
+        }
+    }
+
+    void ValidateConnection(EndPoint remote)
+    {
+        string Ping = "Connection Successful";
 
         byte[] Ping_Encoded = Encoding.ASCII.GetBytes(Ping);
 
-        socket.SendTo(Ping_Encoded, Remote);
+        socket.SendTo(Ping_Encoded, remote);
+    }
+
+    void Send(string massage, EndPoint remote)
+    {
+        byte[] data = Encoding.ASCII.GetBytes(massage);
+
+        socket.SendTo(data, remote);
     }
 }

@@ -8,7 +8,6 @@ using System.Text;
 public class ServerTCP : MonoBehaviour
 {
     Socket socket;
-    Thread mainThread = null;
 
     public GameObject UItextObj;
     TextMeshProUGUI UItext;
@@ -31,41 +30,36 @@ public class ServerTCP : MonoBehaviour
         UItext.text = serverText;
     }
 
-
     public void startServer()
     {
         serverText = "Starting TCP Server...";
 
         IPEndPoint ipep = new(IPAddress.Any, 9050);
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        
         socket.Bind(ipep);
-        
+
         socket.Listen(10);
 
-        mainThread = new Thread(CheckNewConnections);
+        Thread mainThread = new(CheckNewConnections);
         mainThread.Start();
     }
 
     void CheckNewConnections()
     {
-        while(true)
+        while (true)
         {
             User newUser = new()
             {
                 name = "",
-
                 socket = socket.Accept()
             };
 
             IPEndPoint clientep = (IPEndPoint)socket.RemoteEndPoint;
-            serverText = serverText + "\n"+ "Connected with " + clientep.Address.ToString() + " at port " + clientep.Port.ToString();
+            serverText = serverText + "\n" + "Connected with " + clientep.Address.ToString() + " at port " + clientep.Port.ToString();
 
             Thread newConnection = new(() => Receive(newUser));
             newConnection.Start();
         }
-        //This users could be stored in the future on a list
-        //in case you want to manage your connections
 
     }
 

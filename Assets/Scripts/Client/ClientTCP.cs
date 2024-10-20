@@ -24,18 +24,18 @@ public class ClientTCP : MonoBehaviour
 
     public void StartClient()
     {
+        IPEndPoint ipep = new(IPAddress.Parse("192.168.1.131"), 9050);
+        server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+        server.Connect(ipep);
+
         Thread connect = new(Connect);
         connect.Start();
     }
 
     void Connect()
     {
-        IPEndPoint ipep = new(IPAddress.Parse("192.168.1.131"), 9050);
-        server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-        server.Connect(ipep);
-
-        Thread sendThread = new(() => Send("Client Ping"));
+        Thread sendThread = new(() => Send("New User"));
         sendThread.Start();
 
         Thread receiveThread = new(Receive);
@@ -45,6 +45,7 @@ public class ClientTCP : MonoBehaviour
     void Send(string toSend)
     {
         byte[] data = Encoding.ASCII.GetBytes(toSend);
+
         server.Send(data);
     }
 
