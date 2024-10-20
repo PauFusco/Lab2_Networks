@@ -48,14 +48,13 @@ public class ServerTCP : MonoBehaviour
     {
         while (true)
         {
-            User newUser = new()
-            {
-                name = "",
-                socket = socket.Accept()
-            };
+            User newUser = new();
+            newUser.name = "";
+            newUser.socket = socket.Accept();
 
             IPEndPoint clientep = (IPEndPoint)socket.RemoteEndPoint;
-            serverText = serverText + "\n" + "Connected with " + clientep.Address.ToString() + " at port " + clientep.Port.ToString();
+
+            serverText += "\n" + "Connected with " + clientep.Address.ToString() + ":" + clientep.Port.ToString();
 
             Thread newConnection = new(() => Receive(newUser));
             newConnection.Start();

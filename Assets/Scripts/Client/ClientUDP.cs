@@ -28,7 +28,7 @@ public class ClientUDP : MonoBehaviour
     public void StartClient()
     {
         
-        ServerEP = new IPEndPoint(IPAddress.Parse(""/*PUT YOUR IP HERE*/), 9050);
+        ServerEP = new IPEndPoint(IPAddress.Parse("192.168.1.131"/*PUT YOUR IP HERE*/), 9050);
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         socket.Connect(ServerEP);
 
