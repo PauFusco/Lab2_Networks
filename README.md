@@ -1,5 +1,6 @@
 # Lab2_Networks
- 
+A project in which I built a Chat lobby in Unity using the UDP and TCP protocols.
+
 ## Problems I had
 I had some issues making TCP work. In class it works properly (without the bonus, just TODOs) but when I try to debug with my machine at home it doesn't work as intended. For this reason I made only the UDP part of the activity, with all the bonuses.
 
